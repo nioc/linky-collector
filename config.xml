@@ -1,0 +1,17 @@
+<configuration xmlns="http://logging.apache.org/log4php/">
+  <appender name="console" class="LoggerAppenderConsole">
+    <layout class="LoggerLayoutPattern">
+      <param name="conversionPattern" value="%date  %-7logger  %-5level  %message%newline" />
+    </layout>
+  </appender>
+  <appender name="log" class="LoggerAppenderFile">
+    <layout class="LoggerLayoutPattern">
+      <param name="conversionPattern" value="%date  %-7logger  %-5level  %message%newline" />
+    </layout>
+    <param name="file" value="linky-collect.log"/>
+  </appender>
+  <root>
+    <level value="INFO"/>
+    <appender_ref ref="log"/>
+  </root>
+</configuration>
