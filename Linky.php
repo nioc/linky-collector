@@ -195,8 +195,7 @@ class Linky
     {
         // Set start and end dates
         $startDateDT->setTime(0, 0);
-        $endDateDT = clone $startDateDT;
-        $endDateDT = $endDateDT->add(new DateInterval($this::HOURLY_REQUEST_DURATION));
+        $endDateDT = (clone $startDateDT)->add(new DateInterval($this::HOURLY_REQUEST_DURATION));
         $todayDT = new DateTime('now');
         if ($endDateDT > $todayDT) {
             $endDateDT = $todayDT;
@@ -284,10 +283,7 @@ class Linky
         // Get daily data from Enedis API
         $this->logger->info('Getting daily data from Enedis API');
         $todayDT = new DateTime('now');
-        if ($startDatetime > $todayDT) {
-            $this->logger->info("Start date was in the future and has been corrected");
-            $startDatetime = $todayDT;
-        }
+        $startDatetime = $this->capDatetime($startDatetime, $todayDT, $this::DAILY_REQUEST_DURATION);
 
         // Find how many requests are needed to get all data from provided start date
         $dailyMaxDuration = new DateInterval($this::DAILY_REQUEST_DURATION);
@@ -300,13 +296,10 @@ class Linky
         $endDatetime = (clone $startDatetime)->add($dailyMaxDuration);
         try {
             for ($i=0; $i < $requestsCount; $i++) {
-                if ($endDatetime > $todayDT) {
-                    $this->logger->info('End date was in the future and has been corrected');
-                    $endDatetime = (clone $todayDT)->sub(new DateInterval('P1D'));
-                }
                 $this->logger->debug('request #'.$i.' from '.$startDatetime->format('Y-m-d H:i:sP').' to '.$endDatetime->format('Y-m-d H:i:sP'));
                 $daysValues = $this->getDataPerDay($startDatetime, $endDatetime);
                 $startDatetime->add($dailyMaxDuration);
+                $startDatetime = $this->capDatetime($startDatetime, $todayDT, $this::DAILY_REQUEST_DURATION);
                 $endDatetime->add($dailyMaxDuration);
 
                 //Transform data for writing to database
@@ -334,6 +327,33 @@ class Linky
     }
 
     /**
+     * Check if a date is later than max days from today and cap it if so
+     *
+     * @param datetime $datetime datetime to be capped
+     * @param datetime $todayDatetime today datetime
+     * @param string $maxIntervalSpec Interval specification
+     *
+     * @return datetime Capped datetime
+     */
+    private function capDatetime($datetime, $todayDatetime, $maxIntervalSpec)
+    {
+        $maxInterval = new DateInterval($maxIntervalSpec);
+        $interval = date_diff($datetime, $todayDatetime);
+        $days = $interval->days;
+        if ($interval->invert) {
+            // Datetime is in the future
+            $days *= -1;
+        }
+        if ($days < $maxInterval->d) {
+            // Datetime is too close to today, return today minus max allowed
+            $this->logger->debug('Datetime '.$datetime->format('Y-m-d').' was too close to today and has been capped');
+            return (clone $todayDatetime)->sub($maxInterval);
+        }
+        // Datetime is ok, leave it as it is
+        return $datetime;
+    }
+
+    /**
      * Request hourly measures from provided datetime
      *
      * @param datetime $startDateDT starting date of requested measurements
@@ -347,10 +367,6 @@ class Linky
         // Set start and end dates
         $startDateDT->setTime(0, 0);
         $endDateDT->setTime(0, 0);
-        $todayDT = new DateTime('now');
-        if ($endDateDT > $todayDT) {
-            $endDateDT = $todayDT;
-        }
         $startDate = $startDateDT->format('d/m/Y');
         $endDate = $endDateDT->format('d/m/Y');
         $this->logger->debug("Start date: $startDate, end date: $endDate");
