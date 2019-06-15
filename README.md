@@ -41,7 +41,31 @@ Script will create database.
 
 You need [Grafana](https://grafana.com/grafana/download) installed.
 
-Coming soon :)...
+You also need the following plugins:
+
+-   [Pie Chart](https://grafana.com/plugins/grafana-piechart-panel),
+-   [Carpet plot](https://grafana.com/plugins/petrslavotinek-carpetplot-panel).
+
+```bash
+grafana-cli plugins install grafana-piechart-panel
+grafana-cli plugins install petrslavotinek-carpetplot-panel
+service grafana-server restart
+```
+
+Create InfluxDB data source, mainly name and influxDB URL, for example:  `http://localhost:8086` (Configuration / Data sources / Add).
+
+Import JSON file (depends option subscribed) from Grafana GUI (Create / Import):
+
+-   With [off peak period(s)](dashboard-peak.json) or
+-   [Single tariff](dashboard-simple.json).
+
+Configure dashboard variables (Dashboard / Settings / Variables):
+
+-   `datasource` = the data source name you set up,
+-   `offPeakCost` = off-peak pricing (€/kWh),
+-   `peakCost` = peak pricing (€/kWh),
+-   `simpleCost` = single rate pricing (€/kWh),
+-   `timezone` = your timezone example: `Europe/Paris` (used in day aggregations).
 
 ## Usage
 
@@ -57,8 +81,8 @@ Add to your scheduler (cron for exemple) following command (change the path `/us
 
 ```shell
 # /etc/cron.d/linky-collect: crontab fragment for requesting Linky measures
-# Requesting Linky measures and storing to database every day at 02:00
- 0 2    * * *     root   php -f /usr/local/bin/linky-collector/index.php >> /var/log/syslog 2>&1
+# Requesting Linky measures and storing to database every day at 02:45
+ 45 2    * * *     root   php -f /usr/local/bin/linky-collector/index.php >> /var/log/syslog 2>&1
 ```
 
 ### Logs
