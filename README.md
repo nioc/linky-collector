@@ -13,6 +13,8 @@ Linky collector is a PHP script for requesting measures from Linky communicating
 -   Store measures into an InfluxDB database,
 -   Explore data with Grafana.
 
+![screenshot](screenshot.png)
+
 ## Installation
 
 ### Enedis/Linky
