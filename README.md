@@ -6,6 +6,11 @@
 
 Linky collector is a PHP script for requesting measures from Linky communicating meter.
 
+## Update July 2020
+
+Unfortunately, this script does not work anymore since Enedis has changed authentication mechanism without providing public API.
+However, you can still collect your consumption by downloading hourly CSV file from Enedis portal and use workaround script `php index-file.php name_of_your_downloaded_file.csv`.
+
 ## Key features
 
 -   Automatic script (can be used with cron for example),
